@@ -21,13 +21,6 @@ export type Deck = {
   cards: Flashcard[];
 };
 
-export type DeckStats = {
-  mastered: number;
-  learning: number;
-  fresh: number;
-  reviews: number;
-};
-
 export type StorageLike = Pick<Storage, 'getItem' | 'removeItem' | 'setItem'>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -116,21 +109,6 @@ export function createDeck(
     importedAt,
     cards: createFlashcards(drafts),
   };
-}
-
-export function getDeckStats(cards: Flashcard[]): DeckStats {
-  return {
-    mastered: cards.filter((card) => card.attempts > 0 && card.confidence >= 3).length,
-    learning: cards.filter((card) => card.attempts > 0 && card.confidence < 3).length,
-    fresh: cards.filter((card) => card.attempts === 0).length,
-    reviews: cards.reduce((total, card) => total + card.attempts, 0),
-  };
-}
-
-export function confidenceLabel(card: Flashcard) {
-  if (card.confidence >= 3) return 'Mastered';
-  if (card.attempts > 0) return 'Learning';
-  return 'Fresh';
 }
 
 export function updateDeckCard(deck: Deck, changedCard: Flashcard): Deck {

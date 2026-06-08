@@ -11,7 +11,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createDeck, getDeckStats, resetDeckProgress, updateDeckCard, type Deck } from '@/lib/deck';
+import { createDeck, resetDeckProgress, updateDeckCard, type Deck } from '@/lib/deck';
 import {
   parseDelimitedFlashcards,
   parsePrintableFlashcardPage,
@@ -21,10 +21,7 @@ import {
   type PdfTextItemLike,
 } from '@/lib/flashcards';
 import {
-  advanceTestSession,
-  answerCurrentTestQuestion,
   createSprintSession,
-  createTestSession,
   getStudyShortcut,
   moveToNextQueuedCard,
   moveToPreviousQueuedCard,
@@ -33,7 +30,7 @@ import {
 import { INITIAL_STUDIO_FLOW, studioFlowReducer } from '@/lib/studioFlow';
 import { BrowseView, Dashboard, ImportPanel } from './components/DeckViews';
 import { EditCardModal, ManualImportModal } from './components/DeckModals';
-import { CompleteView, StudyView, TestCompleteView, TestView } from './components/SessionViews';
+import { CompleteView, StudyView } from './components/SessionViews';
 import { StudyIcon } from './components/StudyIcon';
 import styles from './study.module.css';
 import { useStoredDeck } from './useStoredDeck';
@@ -87,12 +84,11 @@ export default function FlashcardStudio() {
   const [importProgress, setImportProgress] = useState('');
   const [error, setError] = useState('');
   const [sprintSize, setSprintSize] = useState<number>(40);
-  const [testSize, setTestSize] = useState<number>(20);
   const [search, setSearch] = useState('');
   const [manualText, setManualText] = useState('');
   const [showManualImport, setShowManualImport] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
-  const { isFlipped, selectedTestOptionId, session, testSession, view } = flow;
+  const { isFlipped, session, view } = flow;
   const visibleError = error || persistenceError;
 
   const currentCard = useMemo(() => {
@@ -100,18 +96,6 @@ export default function FlashcardStudio() {
     return deck.cards.find((card) => card.id === session.queue[0]) ?? null;
   }, [deck, session]);
 
-  const stats = useMemo(() => getDeckStats(deck?.cards ?? []), [deck]);
-  const currentTestQuestion = useMemo(() => {
-    if (!testSession) return null;
-    return testSession.questions[testSession.currentIndex] ?? null;
-  }, [testSession]);
-  const currentTestAnswer = useMemo(() => {
-    if (!testSession || !currentTestQuestion) return null;
-    return (
-      testSession.answers.find((answer) => answer.questionCardId === currentTestQuestion.cardId) ??
-      null
-    );
-  }, [currentTestQuestion, testSession]);
   const filteredCards = useMemo(() => {
     if (!deck) return [];
     const term = search.trim().toLowerCase();
@@ -233,32 +217,6 @@ export default function FlashcardStudio() {
     [currentCard, deck, isFlipped, session, setDeck],
   );
 
-  const startTest = useCallback(
-    (requestedSize = testSize) => {
-      if (!deck) return;
-      const nextTestSession = createTestSession(deck.cards, requestedSize);
-      if (!nextTestSession) {
-        setError('Add at least four cards with distinct answers to build a multiple-choice test.');
-        return;
-      }
-      setError('');
-      dispatch({ type: 'start-test', session: nextTestSession });
-    },
-    [deck, testSize],
-  );
-
-  const submitTestAnswer = useCallback(() => {
-    if (!testSession || currentTestAnswer || !selectedTestOptionId) return;
-    const nextTestSession = answerCurrentTestQuestion(testSession, selectedTestOptionId);
-    if (nextTestSession) dispatch({ type: 'answer-test', session: nextTestSession });
-  }, [currentTestAnswer, selectedTestOptionId, testSession]);
-
-  const showNextTestQuestion = useCallback(() => {
-    if (!testSession) return;
-    const result = advanceTestSession(testSession);
-    if (result) dispatch({ type: 'advance-test', ...result });
-  }, [testSession]);
-
   const showAdjacentStudyCard = useCallback(
     (direction: 'next' | 'previous') => {
       if (!session) return;
@@ -331,7 +289,7 @@ export default function FlashcardStudio() {
   }
 
   function resetProgress() {
-    if (!deck || !window.confirm('Reset every confidence score and review count in this deck?')) return;
+    if (!deck || !window.confirm('Reset saved study progress in this deck?')) return;
     setDeck(resetDeckProgress(deck));
   }
 
@@ -372,7 +330,7 @@ export default function FlashcardStudio() {
             </span>
           </button>
           <div className='flex items-center gap-2'>
-            {deck && view !== 'study' && view !== 'test' && (
+            {deck && view !== 'study' && (
               <button
                 className='hidden cursor-pointer rounded-lg border border-outline-variant/25 px-3 py-2 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container-high hover:text-on-surface sm:inline-flex'
                 onClick={() =>
@@ -390,15 +348,6 @@ export default function FlashcardStudio() {
                 type='button'
               >
                 End sprint
-              </button>
-            )}
-            {view === 'test' && (
-              <button
-                className='cursor-pointer rounded-lg border border-outline-variant/25 px-3 py-2 text-xs font-semibold text-on-surface-variant transition hover:bg-surface-container-high hover:text-on-surface'
-                onClick={() => dispatch({ type: 'open-dashboard' })}
-                type='button'
-              >
-                End test
               </button>
             )}
             <span className='hidden rounded-lg border border-outline-variant/25 px-3 py-2 text-xs font-semibold text-on-surface-variant sm:inline-flex'>
@@ -433,7 +382,7 @@ export default function FlashcardStudio() {
                 the cards you miss cycle back while the answer is still fresh.
               </p>
               <div className='mt-8 flex flex-wrap gap-3 text-sm text-on-surface-variant'>
-                {['PDF stays in your browser', 'Keyboard-first reviews', 'Progress saved locally'].map(
+                {['PDF stays in your browser', 'Keyboard-friendly study', 'Progress saved locally'].map(
                   (item) => (
                     <span
                       className='rounded-full border border-outline-variant/20 bg-surface-container-low/70 px-4 py-2'
@@ -475,12 +424,8 @@ export default function FlashcardStudio() {
             onClear={clearDeck}
             onResetProgress={resetProgress}
             onStart={() => startSprint()}
-            onStartTest={() => startTest()}
             setSprintSize={setSprintSize}
-            setTestSize={setTestSize}
             sprintSize={Math.min(sprintSize, deck.cards.length)}
-            stats={stats}
-            testSize={Math.min(testSize, deck.cards.length)}
           />
         )}
 
@@ -498,27 +443,6 @@ export default function FlashcardStudio() {
           <CompleteView
             onDashboard={() => dispatch({ type: 'open-dashboard' })}
             onStartAgain={() => startSprint()}
-            session={session}
-          />
-        )}
-
-        {deck && view === 'test' && currentTestQuestion && testSession && (
-          <TestView
-            answer={currentTestAnswer}
-            onChoose={(optionId) => dispatch({ type: 'choose-test-option', optionId })}
-            onNext={showNextTestQuestion}
-            onSubmit={submitTestAnswer}
-            question={currentTestQuestion}
-            selectedOptionId={selectedTestOptionId}
-            session={testSession}
-          />
-        )}
-
-        {deck && view === 'test-complete' && testSession && (
-          <TestCompleteView
-            onDashboard={() => dispatch({ type: 'open-dashboard' })}
-            onStartAgain={() => startTest()}
-            session={testSession}
           />
         )}
 
@@ -528,7 +452,6 @@ export default function FlashcardStudio() {
             onEdit={setEditingCard}
             onSearch={setSearch}
             search={search}
-            stats={stats}
           />
         )}
       </main>

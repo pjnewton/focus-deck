@@ -2,10 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createDeck } from './deck';
 import {
-  advanceTestSession,
-  answerCurrentTestQuestion,
   createSprintSession,
-  createTestSession,
   getStudyShortcut,
   moveToNextQueuedCard,
   moveToPreviousQueuedCard,
@@ -77,23 +74,5 @@ describe('keyboard shortcuts', () => {
     assert.equal(getStudyShortcut({ code: 'Digit2', key: '2' }), 'hard');
     assert.equal(getStudyShortcut({ code: 'Digit3', key: '3' }), 'got-it');
     assert.equal(getStudyShortcut({ code: 'KeyA', key: 'a' }), null);
-  });
-});
-
-describe('multiple-choice workflow', () => {
-  it('records an answer and advances to the next question', () => {
-    const session = createTestSession(createSampleDeck(4).cards, 4);
-    assert.ok(session);
-
-    const option = session.questions[0].options.find((item) => item.isCorrect);
-    assert.ok(option);
-    const answered = answerCurrentTestQuestion(session, option.id);
-    assert.ok(answered);
-    assert.equal(answered.answers[0].isCorrect, true);
-
-    const advanced = advanceTestSession(answered);
-    assert.ok(advanced);
-    assert.equal(advanced.isComplete, false);
-    assert.equal(advanced.session.currentIndex, 1);
   });
 });

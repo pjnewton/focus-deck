@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  createMultipleChoiceQuestions,
   createFlashcards,
   parseDelimitedFlashcards,
   parsePrintableFlashcardPage,
@@ -92,59 +91,5 @@ describe('manual flashcard parsing', () => {
     assert.equal(cards.length, 2);
     assert.equal(cards[0].question, 'First question');
     assert.equal(cards[1].answer, 'Second answer');
-  });
-});
-
-describe('multiple-choice test generation', () => {
-  const cards = createFlashcards([
-    {
-      sourceId: '1-1',
-      unit: 'Unit 1',
-      question: 'What is placement?',
-      answer: 'Introducing illicit funds into the financial system',
-    },
-    {
-      sourceId: '1-2',
-      unit: 'Unit 1',
-      question: 'What is layering?',
-      answer: 'Moving funds through transactions to obscure their origin',
-    },
-    {
-      sourceId: '1-3',
-      unit: 'Unit 1',
-      question: 'What is integration?',
-      answer: 'Returning laundered funds to the economy as apparently legitimate assets',
-    },
-    {
-      sourceId: '1-4',
-      unit: 'Unit 1',
-      question: 'What is structuring?',
-      answer: 'Breaking transactions into smaller amounts to avoid reporting requirements',
-    },
-    {
-      sourceId: '2-1',
-      unit: 'Unit 2',
-      question: 'What is a risk assessment?',
-      answer: 'Evaluating exposure to identified financial crime risks',
-    },
-  ]);
-
-  it('creates four distinct options with exactly one correct answer', () => {
-    const questions = createMultipleChoiceQuestions(cards, 3, () => 0.5);
-
-    assert.equal(questions.length, 3);
-    for (const question of questions) {
-      assert.equal(question.options.length, 4);
-      assert.equal(question.options.filter((option) => option.isCorrect).length, 1);
-      assert.equal(new Set(question.options.map((option) => option.text)).size, 4);
-      assert.equal(
-        question.options.find((option) => option.isCorrect)?.text,
-        cards.find((card) => card.id === question.cardId)?.answer,
-      );
-    }
-  });
-
-  it('does not create an incomplete test from fewer than four cards', () => {
-    assert.deepEqual(createMultipleChoiceQuestions(cards.slice(0, 3), 3), []);
   });
 });

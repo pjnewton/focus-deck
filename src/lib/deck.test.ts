@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  confidenceLabel,
   createDeck,
-  getDeckStats,
   loadStoredDeck,
   persistStoredDeck,
   resetDeckProgress,
@@ -42,21 +40,6 @@ function createSampleDeck() {
     '2026-05-30T00:00:00.000Z',
   );
 }
-
-describe('deck statistics', () => {
-  it('keeps reviewed zero-confidence cards in the learning category', () => {
-    const deck = createSampleDeck();
-    deck.cards[0] = { ...deck.cards[0], attempts: 1, lastRating: 'again' };
-    deck.cards[1] = { ...deck.cards[1], attempts: 1, lastRating: 'hard' };
-    deck.cards[2] = { ...deck.cards[2], attempts: 4, confidence: 3, lastRating: 'got-it' };
-
-    const stats = getDeckStats(deck.cards);
-
-    assert.deepEqual(stats, { mastered: 1, learning: 2, fresh: 0, reviews: 6 });
-    assert.equal(stats.mastered + stats.learning + stats.fresh, deck.cards.length);
-    assert.equal(confidenceLabel(deck.cards[0]), 'Learning');
-  });
-});
 
 describe('local deck persistence', () => {
   it('round-trips a validated deck through storage', () => {

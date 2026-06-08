@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { INITIAL_STUDIO_FLOW, studioFlowReducer } from './studioFlow';
-import type { Session, TestSession } from './studySessions';
+import type { Session } from './studySessions';
 
 const ACTIVE_SESSION: Session = {
   queue: ['1'],
@@ -9,12 +9,6 @@ const ACTIVE_SESSION: Session = {
   reviews: 0,
   streak: 0,
   bestStreak: 0,
-};
-
-const TEST_SESSION: TestSession = {
-  questions: [],
-  currentIndex: 0,
-  answers: [],
 };
 
 describe('studio flow reducer', () => {
@@ -38,15 +32,12 @@ describe('studio flow reducer', () => {
   });
 
   it('clears stale workflow state when a deck is replaced', () => {
-    const testing = studioFlowReducer(INITIAL_STUDIO_FLOW, {
-      type: 'start-test',
-      session: TEST_SESSION,
+    const studying = studioFlowReducer(INITIAL_STUDIO_FLOW, {
+      type: 'start-sprint',
+      session: ACTIVE_SESSION,
     });
-    const selected = studioFlowReducer(testing, {
-      type: 'choose-test-option',
-      optionId: 'answer-1',
-    });
+    const flipped = studioFlowReducer(studying, { type: 'flip-card' });
 
-    assert.deepEqual(studioFlowReducer(selected, { type: 'replace-deck' }), INITIAL_STUDIO_FLOW);
+    assert.deepEqual(studioFlowReducer(flipped, { type: 'replace-deck' }), INITIAL_STUDIO_FLOW);
   });
 });

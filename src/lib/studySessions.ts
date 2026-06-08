@@ -1,10 +1,8 @@
 import type { Deck } from './deck';
 import {
-  createMultipleChoiceQuestions,
   orderCardsForSprint,
   type Flashcard,
   type FlashcardRating,
-  type MultipleChoiceQuestion,
 } from './flashcards';
 
 export type Session = {
@@ -13,18 +11,6 @@ export type Session = {
   reviews: number;
   streak: number;
   bestStreak: number;
-};
-
-export type TestAnswer = {
-  questionCardId: string;
-  selectedOptionId: string;
-  isCorrect: boolean;
-};
-
-export type TestSession = {
-  questions: MultipleChoiceQuestion[];
-  currentIndex: number;
-  answers: TestAnswer[];
 };
 
 export function createSprintSession(cards: Flashcard[], requestedSize: number): Session {
@@ -101,56 +87,6 @@ export function moveToPreviousQueuedCard(session: Session): Session {
   return {
     ...session,
     queue: [session.queue[session.queue.length - 1], ...session.queue.slice(0, -1)],
-  };
-}
-
-export function createTestSession(cards: Flashcard[], requestedSize: number): TestSession | null {
-  const questions = createMultipleChoiceQuestions(cards, requestedSize);
-  if (questions.length === 0) return null;
-
-  return {
-    questions,
-    currentIndex: 0,
-    answers: [],
-  };
-}
-
-export function answerCurrentTestQuestion(session: TestSession, selectedOptionId: string) {
-  const question = session.questions[session.currentIndex];
-  if (!question || !selectedOptionId) return null;
-  if (session.answers.some((answer) => answer.questionCardId === question.cardId)) return null;
-
-  const selectedOption = question.options.find((option) => option.id === selectedOptionId);
-  if (!selectedOption) return null;
-
-  return {
-    ...session,
-    answers: [
-      ...session.answers,
-      {
-        questionCardId: question.cardId,
-        selectedOptionId,
-        isCorrect: selectedOption.isCorrect,
-      },
-    ],
-  };
-}
-
-export function advanceTestSession(session: TestSession) {
-  const question = session.questions[session.currentIndex];
-  if (!question) return null;
-  if (!session.answers.some((answer) => answer.questionCardId === question.cardId)) return null;
-
-  if (session.currentIndex >= session.questions.length - 1) {
-    return { session, isComplete: true };
-  }
-
-  return {
-    session: {
-      ...session,
-      currentIndex: session.currentIndex + 1,
-    },
-    isComplete: false,
   };
 }
 

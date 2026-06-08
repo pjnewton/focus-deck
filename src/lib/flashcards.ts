@@ -15,20 +15,6 @@ export type Flashcard = FlashcardDraft & {
   lastRating?: FlashcardRating;
 };
 
-export type MultipleChoiceOption = {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-};
-
-export type MultipleChoiceQuestion = {
-  cardId: string;
-  sourceId: string;
-  unit: string;
-  question: string;
-  options: MultipleChoiceOption[];
-};
-
 export type PdfTextItemLike = {
   str: string;
   transform: number[];
@@ -51,29 +37,6 @@ const ROW_BANDS = [
   { min: 350, max: 570 },
   { min: 100, max: 350 },
 ] as const;
-
-const COMMON_WORDS = new Set([
-  'a',
-  'an',
-  'and',
-  'are',
-  'as',
-  'at',
-  'be',
-  'by',
-  'for',
-  'from',
-  'in',
-  'is',
-  'of',
-  'on',
-  'or',
-  'that',
-  'the',
-  'their',
-  'to',
-  'with',
-]);
 
 function normalizeWhitespace(text: string) {
   return text
@@ -259,90 +222,4 @@ export function orderCardsForSprint(cards: Flashcard[]) {
     if (a.confidence !== b.confidence) return a.confidence - b.confidence;
     return a.attempts - b.attempts;
   });
-}
-
-function significantWords(text: string) {
-  return new Set(
-    text
-      .toLowerCase()
-      .match(/[a-z0-9]+/g)
-      ?.filter((word) => word.length > 2 && !COMMON_WORDS.has(word)) ?? [],
-  );
-}
-
-function countSharedWords(first: Set<string>, second: Set<string>) {
-  let shared = 0;
-  for (const word of first) {
-    if (second.has(word)) shared += 1;
-  }
-  return shared;
-}
-
-function scoreDistractor(target: Flashcard, candidate: Flashcard) {
-  const targetQuestionWords = significantWords(target.question);
-  const candidateQuestionWords = significantWords(candidate.question);
-  const targetAnswerWords = significantWords(target.answer);
-  const candidateAnswerWords = significantWords(candidate.answer);
-  const longestAnswer = Math.max(target.answer.length, candidate.answer.length, 1);
-  const lengthSimilarity = 1 - Math.abs(target.answer.length - candidate.answer.length) / longestAnswer;
-
-  return (
-    (target.unit === candidate.unit ? 30 : 0) +
-    countSharedWords(targetQuestionWords, candidateQuestionWords) * 8 +
-    countSharedWords(targetAnswerWords, candidateAnswerWords) * 4 +
-    lengthSimilarity * 12
-  );
-}
-
-/**
- * Creates a local multiple-choice test from an imported deck. Distractors are
- * answers from other cards, weighted toward nearby subject matter so the quiz
- * stays grounded in the source material.
- */
-export function createMultipleChoiceQuestions(
-  cards: Flashcard[],
-  requestedSize: number,
-  random: () => number = Math.random,
-): MultipleChoiceQuestion[] {
-  if (cards.length < 4 || requestedSize <= 0) return [];
-
-  return shuffleWithRandom(cards, random)
-    .slice(0, Math.min(requestedSize, cards.length))
-    .map((card) => {
-      const seenAnswers = new Set([normalizeWhitespace(card.answer).toLowerCase()]);
-      const distractors = cards
-        .filter((candidate) => candidate.id !== card.id)
-        .map((candidate) => ({
-          card: candidate,
-          score: scoreDistractor(card, candidate),
-          tieBreaker: random(),
-        }))
-        .sort((first, second) => second.score - first.score || first.tieBreaker - second.tieBreaker)
-        .flatMap(({ card: candidate }) => {
-          const normalizedAnswer = normalizeWhitespace(candidate.answer).toLowerCase();
-          if (seenAnswers.has(normalizedAnswer)) return [];
-          seenAnswers.add(normalizedAnswer);
-          return [candidate.answer];
-        })
-        .slice(0, 3);
-
-      return {
-        cardId: card.id,
-        sourceId: card.sourceId,
-        unit: card.unit,
-        question: card.question,
-        options: shuffleWithRandom(
-          [
-            { id: `${card.id}:correct`, text: card.answer, isCorrect: true },
-            ...distractors.map((answer, index) => ({
-              id: `${card.id}:distractor-${index + 1}`,
-              text: answer,
-              isCorrect: false,
-            })),
-          ],
-          random,
-        ),
-      };
-    })
-    .filter((question) => question.options.length === 4);
 }
