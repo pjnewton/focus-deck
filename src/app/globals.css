@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-surface-dim: #0f1115;
+  --color-surface: #0f1115;
+  --color-base: #0f1115;
+  --color-surface-container-lowest: #11141a;
+  --color-surface-container-low: #181b22;
+  --color-surface-container: #1d2129;
+  --color-surface-container-high: #252a34;
+  --color-surface-container-highest: #303642;
+  --color-on-surface: #f1f3f8;
+  --color-on-surface-variant: #a6adba;
+  --color-outline: #414958;
+  --color-outline-variant: #414958;
+  --color-primary: #b7c3ff;
+  --color-error: #ffb4ab;
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  font-size: 106.25%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #0f1115;
+  color: #f1f3f8;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+button:not(:disabled):active,
+a[href]:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(183, 195, 255, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  a[href]:active {
+    transform: none;
+    transition: none;
+  }
+}
