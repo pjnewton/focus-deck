@@ -1,4 +1,3 @@
-import type { DragEvent, RefObject } from 'react';
 import type { Deck } from '@/lib/deck';
 import type { Flashcard } from '@/lib/flashcards';
 import styles from '../study.module.css';
@@ -8,52 +7,39 @@ const SPRINT_SIZES = [20, 40, 80] as const;
 
 export function ImportPanel({
   error,
-  fileInputRef,
   importProgress,
-  isDragging,
   isImporting,
-  onDragLeave,
-  onDragOver,
-  onDrop,
-  onOpenManual,
+  onLoadBundledDeck,
   onTryDemo,
 }: {
   error: string;
-  fileInputRef: RefObject<HTMLInputElement | null>;
   importProgress: string;
-  isDragging: boolean;
   isImporting: boolean;
-  onDragLeave: () => void;
-  onDragOver: (event: DragEvent<HTMLDivElement>) => void;
-  onDrop: (event: DragEvent<HTMLDivElement>) => void;
-  onOpenManual: () => void;
+  onLoadBundledDeck: () => void;
   onTryDemo: () => void;
 }) {
   return (
     <div
-      className={`${styles.dropZone} ${isDragging ? styles.dropZoneActive : ''} rounded-lg border border-outline-variant/25 p-5 transition sm:p-7`}
-      onDragLeave={onDragLeave}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      className={`${styles.dropZone} rounded-lg border border-outline-variant/25 p-5 transition sm:p-7`}
     >
       <div className='rounded-lg border border-dashed border-primary/30 bg-primary/[0.04] p-7 text-center sm:p-10'>
         <span className='mx-auto flex h-16 w-16 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary'>
-          <StudyIcon className='h-7 w-7' name='upload' />
+          <StudyIcon className='h-7 w-7' name='deck' />
         </span>
         <h2 className='mt-6 font-display text-2xl font-bold tracking-normal'>
-          {isImporting ? 'Building your deck' : 'Drop in a supported flashcard PDF'}
+          {isImporting ? 'Building your deck' : 'Load the ACAMS deck'}
         </h2>
         <p className='mt-2 text-sm leading-6 text-on-surface-variant'>
-          Focus Deck reads the three-row foldable printable format locally and never sends your file
-          to a server.
+          Focus Deck reads the bundled three-row foldable printable PDF in your browser and saves
+          study progress locally.
         </p>
         <button
           className='mt-6 cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-bold text-surface transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60'
           disabled={isImporting}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={onLoadBundledDeck}
           type='button'
         >
-          {isImporting ? 'Reading PDF...' : 'Choose PDF'}
+          {isImporting ? 'Reading PDF...' : 'Load ACAMS deck'}
         </button>
       </div>
       {importProgress && (
@@ -70,9 +56,6 @@ export function ImportPanel({
         <button className='cursor-pointer transition hover:text-on-surface' onClick={onTryDemo} type='button'>
           Load demo deck
         </button>
-        <button className='cursor-pointer transition hover:text-on-surface' onClick={onOpenManual} type='button'>
-          Import pasted text
-        </button>
       </div>
     </div>
   );
@@ -82,8 +65,8 @@ export function Dashboard({
   deck,
   importProgress,
   onBrowse,
-  onChoosePdf,
   onClear,
+  onLoadBundledDeck,
   onResetProgress,
   onStart,
   setSprintSize,
@@ -92,8 +75,8 @@ export function Dashboard({
   deck: Deck;
   importProgress: string;
   onBrowse: () => void;
-  onChoosePdf: () => void;
   onClear: () => void;
+  onLoadBundledDeck: () => void;
   onResetProgress: () => void;
   onStart: () => void;
   setSprintSize: (size: number) => void;
@@ -209,8 +192,8 @@ export function Dashboard({
       </div>
 
       <div className='mt-7 flex flex-wrap gap-4 text-xs font-semibold text-on-surface-variant'>
-        <button className='cursor-pointer transition hover:text-on-surface' onClick={onChoosePdf} type='button'>
-          Replace PDF
+        <button className='cursor-pointer transition hover:text-on-surface' onClick={onLoadBundledDeck} type='button'>
+          Reload ACAMS deck
         </button>
         <button className='cursor-pointer transition hover:text-on-surface' onClick={onResetProgress} type='button'>
           Reset progress

@@ -1,15 +1,24 @@
 # Focus Deck
 
-A local-only flashcard study app for three-row foldable printable flashcard PDFs.
+A local-only flashcard study app for a bundled three-row foldable printable ACAMS flashcard PDF.
+
+Place the production PDF at `ACAMS-Flashcards-Printable-v7.02.pdf` or `public/acams-flashcards.pdf` before building locally. Both PDF paths are ignored by Git.
+
+For Netlify Git deploys, set one of these environment variables so the build can recreate `public/acams-flashcards.pdf` without committing the PDF:
+
+- `ACAMS_FLASHCARDS_PDF_URL`: direct HTTPS URL to the PDF
+- `ACAMS_FLASHCARDS_PDF_TOKEN`: optional bearer token for the PDF URL
+- `ACAMS_FLASHCARDS_PDF_BASE64`: base64-encoded PDF contents
+- `ACAMS_FLASHCARDS_PDF_PATH`: path to a PDF already available in the build environment
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), choose a supported PDF, and start a focus sprint. The PDF is processed in your browser and your deck progress stays in local storage.
+Open [http://localhost:3000](http://localhost:3000), load the ACAMS deck, and start a focus sprint. The PDF is served as a static app asset, parsed in your browser, and your deck progress stays in local storage.
 
-The PDF importer expects three front/back card rows per page, with the fronts on the left and the answers on the right. For other layouts, use the pasted-text importer with `Q:` / `A:` blocks or `question::answer` pairs.
+The PDF parser expects three front/back card rows per page, with the fronts on the left and the answers on the right.
 
 ## Maintenance
 

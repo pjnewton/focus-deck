@@ -4,3 +4,5 @@ out
 *.log
 *.tsbuildinfo
 .DS_Store
+ACAMS-Flashcards-Printable-v7.02.pdf
+public/acams-flashcards.pdf

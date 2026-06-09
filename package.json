@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/prepare-bundled-pdf.mjs",
     "build": "next build",
+    "prepare:pdf": "node scripts/prepare-bundled-pdf.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc",

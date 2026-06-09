@@ -86,51 +86,6 @@ function ModalShell({
   );
 }
 
-export function ManualImportModal({
-  error,
-  manualText,
-  onClose,
-  onSubmit,
-  onTextChange,
-}: {
-  error: string;
-  manualText: string;
-  onClose: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onTextChange: (text: string) => void;
-}) {
-  return (
-    <ModalShell onClose={onClose} titleId='manual-import-title'>
-      <form onSubmit={onSubmit}>
-        <p className='text-xs font-bold uppercase tracking-[0.2em] text-primary'>Manual import</p>
-        <h2 className='mt-2 font-display text-3xl font-bold tracking-normal' id='manual-import-title'>
-          Paste a simple card list.
-        </h2>
-        <p className='mt-3 text-sm leading-6 text-on-surface-variant'>
-          Use blank lines between cards. Each card can use Q:/A: lines or a question::answer pair.
-        </p>
-        <label className='block'>
-          <span className='sr-only'>Flashcard list</span>
-          <textarea
-            className='mt-5 min-h-56 w-full rounded-lg border border-outline-variant/25 bg-surface-container-lowest p-4 text-sm leading-6 text-on-surface placeholder:text-on-surface-variant/60'
-            onChange={(event) => onTextChange(event.target.value)}
-            placeholder={'Q: What is placement?\nA: Introducing funds into the financial system.\n\nWhat is layering?::Moving funds through transactions.'}
-            value={manualText}
-          />
-        </label>
-        {error && (
-          <p className='mt-3 text-xs font-semibold text-error' role='alert'>
-            {error}
-          </p>
-        )}
-        <button className='mt-4 w-full cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-bold text-surface transition hover:bg-primary/90' type='submit'>
-          Build local deck
-        </button>
-      </form>
-    </ModalShell>
-  );
-}
-
 export function EditCardModal({
   card,
   onCancel,

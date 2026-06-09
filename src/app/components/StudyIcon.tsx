@@ -7,7 +7,6 @@ export type StudyIconName =
   | 'lock'
   | 'search'
   | 'spark'
-  | 'upload'
   | 'x';
 
 export function StudyIcon({
@@ -26,7 +25,6 @@ export function StudyIcon({
     lock: <path d='M7 10V7a5 5 0 0 1 10 0v3m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z' />,
     search: <path d='m21 21-4.3-4.3m1.3-5.2a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z' />,
     spark: <path d='m12 2 1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2Zm7 15 .7 2.3L22 20l-2.3.7L19 23l-.7-2.3L16 20l2.3-.7L19 17Z' />,
-    upload: <path d='M12 16V4m0 0L7 9m5-5 5 5M5 20h14' />,
     x: <path d='M18 6 6 18M6 6l12 12' />,
   };
 

@@ -1,19 +1,15 @@
 'use client';
 
 import {
-  type ChangeEvent,
-  type DragEvent,
   type FormEvent,
   useCallback,
   useEffect,
   useMemo,
   useReducer,
-  useRef,
   useState,
 } from 'react';
 import { createDeck, resetDeckProgress, updateDeckCard, type Deck } from '@/lib/deck';
 import {
-  parseDelimitedFlashcards,
   parsePrintableFlashcardPage,
   type Flashcard,
   type FlashcardDraft,
@@ -29,11 +25,14 @@ import {
 } from '@/lib/studySessions';
 import { INITIAL_STUDIO_FLOW, studioFlowReducer } from '@/lib/studioFlow';
 import { BrowseView, Dashboard, ImportPanel } from './components/DeckViews';
-import { EditCardModal, ManualImportModal } from './components/DeckModals';
+import { EditCardModal } from './components/DeckModals';
 import { CompleteView, StudyView } from './components/SessionViews';
 import { StudyIcon } from './components/StudyIcon';
 import styles from './study.module.css';
 import { useStoredDeck } from './useStoredDeck';
+
+const BUNDLED_PDF_PATH = '/acams-flashcards.pdf';
+const BUNDLED_DECK_NAME = 'ACAMS flashcards';
 
 const DEMO_CARDS: FlashcardDraft[] = [
   {
@@ -58,7 +57,7 @@ const DEMO_CARDS: FlashcardDraft[] = [
     sourceId: 'demo-4',
     unit: 'Demo',
     question: 'Where does your imported deck live?',
-    answer: 'Only in this browser using local storage. The PDF is never uploaded.',
+    answer: 'Only in this browser using local storage. The bundled PDF is never uploaded.',
   },
   {
     sourceId: 'demo-5',
@@ -75,18 +74,13 @@ const DEMO_CARDS: FlashcardDraft[] = [
 ];
 
 export default function FlashcardStudio() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const importRunIdRef = useRef(0);
   const { deck, hasHydrated, persistenceError, setDeck } = useStoredDeck();
   const [flow, dispatch] = useReducer(studioFlowReducer, INITIAL_STUDIO_FLOW);
-  const [isDragging, setIsDragging] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState('');
   const [error, setError] = useState('');
   const [sprintSize, setSprintSize] = useState<number>(40);
   const [search, setSearch] = useState('');
-  const [manualText, setManualText] = useState('');
-  const [showManualImport, setShowManualImport] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const { isFlipped, session, view } = flow;
   const visibleError = error || persistenceError;
@@ -110,35 +104,24 @@ export default function FlashcardStudio() {
 
   const replaceDeck = useCallback(
     (nextDeck: Deck | null, progress = '') => {
-      importRunIdRef.current += 1;
       setDeck(nextDeck);
       dispatch({ type: 'replace-deck' });
       setError('');
       setImportProgress(progress);
       setIsImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     },
     [setDeck],
   );
 
-  const importDeck = useCallback(
-    async (file: File) => {
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
-        setError('Choose a PDF file to build your deck.');
+  const loadBundledDeck = useCallback(
+    async ({ confirmReplace = false }: { confirmReplace?: boolean } = {}) => {
+      if (confirmReplace && deck && !window.confirm('Replace your current local deck and its saved progress?')) {
         return;
       }
-      if (deck && !window.confirm('Replace your current local deck and its saved progress?')) {
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        return;
-      }
-
-      const importRunId = importRunIdRef.current + 1;
-      importRunIdRef.current = importRunId;
-      const isCurrentImport = () => importRunIdRef.current === importRunId;
 
       setError('');
       setIsImporting(true);
-      setImportProgress('Opening PDF locally...');
+      setImportProgress('Opening bundled ACAMS PDF...');
 
       try {
         const pdfjs = await import('pdfjs-dist');
@@ -147,19 +130,22 @@ export default function FlashcardStudio() {
           import.meta.url,
         ).toString();
 
+        const response = await fetch(BUNDLED_PDF_PATH, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Bundled PDF unavailable: ${response.status}`);
+        }
+
         const loadingTask = pdfjs.getDocument({
-          data: new Uint8Array(await file.arrayBuffer()),
+          data: new Uint8Array(await response.arrayBuffer()),
         });
         const pdf = await loadingTask.promise;
         const drafts: FlashcardDraft[] = [];
 
         try {
           for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-            if (!isCurrentImport()) return;
             setImportProgress(`Reading page ${pageNumber} of ${pdf.numPages}...`);
             const page = await pdf.getPage(pageNumber);
             const text = await page.getTextContent();
-            if (!isCurrentImport()) return;
             drafts.push(
               ...parsePrintableFlashcardPage(
                 text.items.flatMap((item): PdfTextItemLike[] =>
@@ -177,22 +163,17 @@ export default function FlashcardStudio() {
           throw new Error('No supported three-row printable front/back cards were found.');
         }
 
-        if (!isCurrentImport()) return;
-        setDeck(createDeck(file.name.replace(/\.pdf$/i, ''), drafts));
+        setDeck(createDeck(BUNDLED_DECK_NAME, drafts));
         dispatch({ type: 'replace-deck' });
-        setImportProgress(`Ready: ${drafts.length} cards extracted locally.`);
+        setImportProgress(`Ready: ${drafts.length} ACAMS cards extracted locally.`);
       } catch (cause) {
-        if (!isCurrentImport()) return;
-        console.error('[focus-deck:pdf-import]', cause);
+        console.error('[focus-deck:bundled-pdf-import]', cause);
         setError(
-          'I could not read supported three-row cards from that PDF. You can try the manual text importer instead.',
+          `I could not read supported three-row cards from the bundled ACAMS PDF. Confirm ${BUNDLED_PDF_PATH} exists before deploying.`,
         );
         setImportProgress('');
       } finally {
-        if (isCurrentImport()) {
-          setIsImporting(false);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-        }
+        setIsImporting(false);
       }
     },
     [deck, setDeck],
@@ -255,31 +236,6 @@ export default function FlashcardStudio() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [rateCard, showAdjacentStudyCard, view]);
-
-  function handleDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setIsDragging(false);
-    const file = event.dataTransfer.files[0];
-    if (file) void importDeck(file);
-  }
-
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (file) void importDeck(file);
-  }
-
-  function importManualCards(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const cards = parseDelimitedFlashcards(manualText);
-    if (cards.length === 0) {
-      setError('Use one Q:/A: block per card, or separate each question and answer with ::.');
-      return;
-    }
-    replaceDeck(createDeck('Manual study deck', cards), `Ready: ${cards.length} manually entered cards.`);
-    setError('');
-    setManualText('');
-    setShowManualImport(false);
-  }
 
   function saveEditedCard(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -378,11 +334,11 @@ export default function FlashcardStudio() {
                 <span className='block text-primary'>Keep the momentum.</span>
               </h1>
               <p className='mt-6 max-w-2xl text-lg leading-8 text-on-surface-variant'>
-                Import a supported three-row foldable flashcard PDF, launch a focused sprint, and let
+                Load the bundled ACAMS flashcard PDF, launch a focused sprint, and let
                 the cards you miss cycle back while the answer is still fresh.
               </p>
               <div className='mt-8 flex flex-wrap gap-3 text-sm text-on-surface-variant'>
-                {['PDF stays in your browser', 'Keyboard-friendly study', 'Progress saved locally'].map(
+                {['Bundled ACAMS PDF', 'Keyboard-friendly study', 'Progress saved locally'].map(
                   (item) => (
                     <span
                       className='rounded-full border border-outline-variant/20 bg-surface-container-low/70 px-4 py-2'
@@ -397,17 +353,9 @@ export default function FlashcardStudio() {
 
             <ImportPanel
               error={visibleError}
-              fileInputRef={fileInputRef}
               importProgress={importProgress}
-              isDragging={isDragging}
               isImporting={isImporting}
-              onDragLeave={() => setIsDragging(false)}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setIsDragging(true);
-              }}
-              onDrop={handleDrop}
-              onOpenManual={() => setShowManualImport(true)}
+              onLoadBundledDeck={() => void loadBundledDeck()}
               onTryDemo={() => {
                 replaceDeck(createDeck('Focus Deck demo', DEMO_CARDS));
               }}
@@ -420,8 +368,8 @@ export default function FlashcardStudio() {
             deck={deck}
             importProgress={importProgress}
             onBrowse={() => dispatch({ type: 'open-browse' })}
-            onChoosePdf={() => fileInputRef.current?.click()}
             onClear={clearDeck}
+            onLoadBundledDeck={() => void loadBundledDeck({ confirmReplace: true })}
             onResetProgress={resetProgress}
             onStart={() => startSprint()}
             setSprintSize={setSprintSize}
@@ -455,24 +403,6 @@ export default function FlashcardStudio() {
           />
         )}
       </main>
-
-      <input
-        accept='application/pdf,.pdf'
-        className='hidden'
-        onChange={handleFileChange}
-        ref={fileInputRef}
-        type='file'
-      />
-
-      {showManualImport && (
-        <ManualImportModal
-          error={visibleError}
-          manualText={manualText}
-          onClose={() => setShowManualImport(false)}
-          onSubmit={importManualCards}
-          onTextChange={setManualText}
-        />
-      )}
       {editingCard && (
         <EditCardModal
           card={editingCard}
