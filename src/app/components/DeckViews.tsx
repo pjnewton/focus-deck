@@ -4,6 +4,7 @@ import styles from '../study.module.css';
 import { StudyIcon } from './StudyIcon';
 
 const SPRINT_SIZES = [20, 40, 80] as const;
+const ALL_UNITS = 'all';
 
 export function ImportPanel({
   error,
@@ -59,17 +60,26 @@ export function Dashboard({
   importProgress,
   onBrowse,
   onStart,
+  selectedUnit,
+  setSelectedUnit,
   setSprintSize,
   sprintSize,
+  studyCardCount,
+  units,
 }: {
   deck: Deck;
   importProgress: string;
   onBrowse: () => void;
   onStart: () => void;
+  selectedUnit: string;
+  setSelectedUnit: (unit: string) => void;
   setSprintSize: (size: number) => void;
   sprintSize: number;
+  studyCardCount: number;
+  units: string[];
 }) {
-  const sprintSizes = SPRINT_SIZES.filter((size) => size < deck.cards.length);
+  const sprintSizes = SPRINT_SIZES.filter((size) => size < studyCardCount);
+  const selectedUnitLabel = selectedUnit === ALL_UNITS ? 'All units' : selectedUnit;
 
   return (
     <section>
@@ -91,7 +101,9 @@ export function Dashboard({
         <div className='rounded-lg border border-outline-variant/20 bg-surface-container-low/75 px-5 py-4'>
           <p className='text-[0.66rem] font-bold uppercase tracking-[0.18em] text-on-surface-variant'>Current deck</p>
           <p className='mt-1 max-w-xs truncate font-display text-lg font-bold'>{deck.name}</p>
-          <p className='mt-1 text-xs text-on-surface-variant'>{deck.cards.length} local cards</p>
+          <p className='mt-1 text-xs text-on-surface-variant'>
+            {studyCardCount} of {deck.cards.length} cards selected
+          </p>
         </div>
       </div>
 
@@ -116,6 +128,44 @@ export function Dashboard({
               <p className='text-sm text-on-surface-variant'>Choose a short set and get moving.</p>
             </div>
           </div>
+          <div className='mt-6'>
+            <p className='text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant'>
+              Study section
+            </p>
+            <div className='mt-3 flex flex-wrap gap-2' role='group' aria-label='Study section'>
+              <button
+                className={`cursor-pointer rounded-lg border px-4 py-3 text-sm font-bold transition ${
+                  selectedUnit === ALL_UNITS
+                    ? 'border-primary/60 bg-primary/15 text-primary'
+                    : 'border-outline-variant/25 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                }`}
+                onClick={() => setSelectedUnit(ALL_UNITS)}
+                type='button'
+              >
+                All units
+              </button>
+              {units.map((unit) => (
+                <button
+                  className={`cursor-pointer rounded-lg border px-4 py-3 text-sm font-bold transition ${
+                    selectedUnit === unit
+                      ? 'border-primary/60 bg-primary/15 text-primary'
+                      : 'border-outline-variant/25 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                  }`}
+                  key={unit}
+                  onClick={() => setSelectedUnit(unit)}
+                  type='button'
+                >
+                  {unit}
+                </button>
+              ))}
+            </div>
+            <p className='mt-3 text-xs text-on-surface-variant'>
+              {selectedUnitLabel}: {studyCardCount} cards
+            </p>
+          </div>
+          <p className='mt-6 text-xs font-bold uppercase tracking-[0.18em] text-on-surface-variant'>
+            Sprint size
+          </p>
           <div className='mt-6 flex flex-wrap gap-2'>
             {sprintSizes.map((size) => (
               <button
@@ -133,18 +183,19 @@ export function Dashboard({
             ))}
             <button
               className={`cursor-pointer rounded-lg border px-4 py-3 text-sm font-bold transition ${
-                sprintSize === deck.cards.length
+                sprintSize === studyCardCount
                   ? 'border-primary/60 bg-primary/15 text-primary'
                   : 'border-outline-variant/25 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
               }`}
-              onClick={() => setSprintSize(deck.cards.length)}
+              onClick={() => setSprintSize(studyCardCount)}
               type='button'
             >
-              Full deck
+              Full section
             </button>
           </div>
           <button
-            className='mt-6 flex w-full cursor-pointer items-center justify-between rounded-lg bg-primary px-5 py-4 text-sm font-bold text-surface transition hover:bg-primary/90'
+            className='mt-6 flex w-full cursor-pointer items-center justify-between rounded-lg bg-primary px-5 py-4 text-sm font-bold text-surface transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60'
+            disabled={studyCardCount === 0}
             onClick={onStart}
             type='button'
           >

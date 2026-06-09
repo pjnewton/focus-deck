@@ -33,6 +33,7 @@ import { useStoredDeck } from './useStoredDeck';
 
 const BUNDLED_PDF_PATH = '/acams-flashcards.pdf';
 const BUNDLED_DECK_NAME = 'ACAMS flashcards';
+const ALL_UNITS = 'all';
 
 export default function FlashcardStudio() {
   const { deck, hasHydrated, persistenceError, setDeck } = useStoredDeck();
@@ -42,6 +43,7 @@ export default function FlashcardStudio() {
   const [error, setError] = useState('');
   const [sprintSize, setSprintSize] = useState<number>(40);
   const [search, setSearch] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState<string>(ALL_UNITS);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const { isFlipped, session, view } = flow;
   const visibleError = error || persistenceError;
@@ -62,6 +64,19 @@ export default function FlashcardStudio() {
         .includes(term),
     );
   }, [deck, search]);
+
+  const availableUnits = useMemo(() => {
+    if (!deck) return [];
+    return Array.from(new Set(deck.cards.map((card) => card.unit))).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+    );
+  }, [deck]);
+
+  const selectedStudyCards = useMemo(() => {
+    if (!deck) return [];
+    if (selectedUnit === ALL_UNITS) return deck.cards;
+    return deck.cards.filter((card) => card.unit === selectedUnit);
+  }, [deck, selectedUnit]);
 
   const loadBundledDeck = useCallback(
     async ({ confirmReplace = false }: { confirmReplace?: boolean } = {}) => {
@@ -114,6 +129,7 @@ export default function FlashcardStudio() {
         }
 
         setDeck(createDeck(BUNDLED_DECK_NAME, drafts));
+        setSelectedUnit(ALL_UNITS);
         dispatch({ type: 'replace-deck' });
         setImportProgress(`Ready: ${drafts.length} ACAMS cards extracted locally.`);
       } catch (cause) {
@@ -131,10 +147,13 @@ export default function FlashcardStudio() {
 
   const startSprint = useCallback(
     (requestedSize = sprintSize) => {
-      if (!deck) return;
-      dispatch({ type: 'start-sprint', session: createSprintSession(deck.cards, requestedSize) });
+      if (!deck || selectedStudyCards.length === 0) return;
+      dispatch({
+        type: 'start-sprint',
+        session: createSprintSession(selectedStudyCards, requestedSize),
+      });
     },
-    [deck, sprintSize],
+    [deck, selectedStudyCards, sprintSize],
   );
 
   const rateCard = useCallback(
@@ -300,8 +319,12 @@ export default function FlashcardStudio() {
             importProgress={importProgress}
             onBrowse={() => dispatch({ type: 'open-browse' })}
             onStart={() => startSprint()}
+            selectedUnit={selectedUnit}
+            setSelectedUnit={setSelectedUnit}
             setSprintSize={setSprintSize}
-            sprintSize={Math.min(sprintSize, deck.cards.length)}
+            sprintSize={Math.min(sprintSize, selectedStudyCards.length)}
+            studyCardCount={selectedStudyCards.length}
+            units={availableUnits}
           />
         )}
 

@@ -1,10 +1,25 @@
 import type { NextConfig } from 'next';
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
-    value:
-      "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob:; manifest-src 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; upgrade-insecure-requests",
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "connect-src 'self'",
+      "font-src 'self' data:",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "img-src 'self' data: blob:",
+      "manifest-src 'self'",
+      "object-src 'none'",
+      `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+      "style-src 'self' 'unsafe-inline'",
+      "worker-src 'self' blob:",
+      'upgrade-insecure-requests',
+    ].join('; '),
   },
   {
     key: 'Cross-Origin-Opener-Policy',
