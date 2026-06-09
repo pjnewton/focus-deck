@@ -17,7 +17,8 @@ export function StudyView({
   session: Session;
 }) {
   const completed = Math.max(0, session.startingCount - session.queue.length);
-  const percent = Math.round((completed / session.startingCount) * 100);
+  const percent =
+    session.startingCount > 0 ? Math.round((completed / session.startingCount) * 100) : 0;
 
   return (
     <section className='mx-auto max-w-4xl'>
@@ -27,13 +28,27 @@ export function StudyView({
           <h1 className='mt-2 font-display text-3xl font-bold tracking-normal sm:text-4xl'>Stay in the rhythm.</h1>
         </div>
         <div className='text-right'>
-          <p className='font-display text-2xl font-bold text-primary'>{session.queue.length}</p>
-          <p className='text-xs font-semibold uppercase tracking-[0.16em] text-on-surface-variant'>in queue</p>
+          <p className='font-display text-2xl font-bold text-primary'>{percent}%</p>
+          <p className='text-xs font-semibold uppercase tracking-[0.16em] text-on-surface-variant'>complete</p>
         </div>
       </div>
 
-      <div className='mt-5 h-1.5 overflow-hidden rounded-full bg-surface-container-high'>
-        <div className={`${styles.meterFill} h-full rounded-full bg-primary`} style={{ width: `${percent}%` }} />
+      <div className='mt-5 rounded-lg border border-outline-variant/20 bg-surface-container-low/80 p-4'>
+        <div
+          aria-label='Sprint progress'
+          aria-valuemax={session.startingCount}
+          aria-valuemin={0}
+          aria-valuenow={completed}
+          className='h-2 overflow-hidden rounded-full bg-surface-container-high'
+          role='progressbar'
+        >
+          <div className={`${styles.meterFill} h-full rounded-full bg-primary`} style={{ width: `${percent}%` }} />
+        </div>
+        <div className='mt-4 grid grid-cols-3 gap-3 text-center'>
+          <ProgressStat label='Done' value={completed} />
+          <ProgressStat label='Left' value={session.queue.length} />
+          <ProgressStat label='Reviews' value={session.reviews} />
+        </div>
       </div>
 
       <button
@@ -81,6 +96,17 @@ export function StudyView({
         Keep moving through the queue at your own pace.
       </p>
     </section>
+  );
+}
+
+function ProgressStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <p className='font-display text-xl font-bold text-on-surface'>{value}</p>
+      <p className='mt-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-on-surface-variant'>
+        {label}
+      </p>
+    </div>
   );
 }
 
