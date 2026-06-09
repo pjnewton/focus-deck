@@ -8,7 +8,7 @@ import {
   useReducer,
   useState,
 } from 'react';
-import { createDeck, updateDeckCard, type Deck } from '@/lib/deck';
+import { createDeck, updateDeckCard } from '@/lib/deck';
 import {
   parsePrintableFlashcardPage,
   type Flashcard,
@@ -33,45 +33,6 @@ import { useStoredDeck } from './useStoredDeck';
 
 const BUNDLED_PDF_PATH = '/acams-flashcards.pdf';
 const BUNDLED_DECK_NAME = 'ACAMS flashcards';
-
-const DEMO_CARDS: FlashcardDraft[] = [
-  {
-    sourceId: 'demo-1',
-    unit: 'Demo',
-    question: 'What is the goal of a focus sprint?',
-    answer: 'Move quickly through a small set, then repeat the cards that need another pass.',
-  },
-  {
-    sourceId: 'demo-2',
-    unit: 'Demo',
-    question: 'Which key flips the current card?',
-    answer: 'Press Space to reveal the answer.',
-  },
-  {
-    sourceId: 'demo-3',
-    unit: 'Demo',
-    question: 'What happens when you rate a card Again?',
-    answer: 'The card returns near the front of your queue so you can retry it while the idea is fresh.',
-  },
-  {
-    sourceId: 'demo-4',
-    unit: 'Demo',
-    question: 'Where does your imported deck live?',
-    answer: 'Only in this browser using local storage. The bundled PDF is never uploaded.',
-  },
-  {
-    sourceId: 'demo-5',
-    unit: 'Demo',
-    question: 'What should you do when an answer feels familiar but uncertain?',
-    answer: 'Choose Hard. Honest ratings make the next sprint more useful.',
-  },
-  {
-    sourceId: 'demo-6',
-    unit: 'Demo',
-    question: 'How do you return to the dashboard during a sprint?',
-    answer: 'Use the End sprint button in the top-right corner.',
-  },
-];
 
 export default function FlashcardStudio() {
   const { deck, hasHydrated, persistenceError, setDeck } = useStoredDeck();
@@ -101,17 +62,6 @@ export default function FlashcardStudio() {
         .includes(term),
     );
   }, [deck, search]);
-
-  const replaceDeck = useCallback(
-    (nextDeck: Deck | null, progress = '') => {
-      setDeck(nextDeck);
-      dispatch({ type: 'replace-deck' });
-      setError('');
-      setImportProgress(progress);
-      setIsImporting(false);
-    },
-    [setDeck],
-  );
 
   const loadBundledDeck = useCallback(
     async ({ confirmReplace = false }: { confirmReplace?: boolean } = {}) => {
@@ -169,7 +119,7 @@ export default function FlashcardStudio() {
       } catch (cause) {
         console.error('[focus-deck:bundled-pdf-import]', cause);
         setError(
-          `I could not read supported three-row cards from the bundled ACAMS PDF. Confirm ${BUNDLED_PDF_PATH} exists before deploying.`,
+          'The ACAMS deck is temporarily unavailable. Please refresh and try again in a moment.',
         );
         setImportProgress('');
       } finally {
@@ -311,7 +261,7 @@ export default function FlashcardStudio() {
             <div>
               <p className='mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-primary'>
                 <StudyIcon className='h-4 w-4' name='lock' />
-                Private by design
+                Focused ACAMS review
               </p>
               <h1 className='max-w-3xl font-display text-5xl font-bold leading-[0.98] tracking-normal text-on-surface sm:text-7xl'>
                 Study the cards.
@@ -322,7 +272,7 @@ export default function FlashcardStudio() {
                 the cards you miss cycle back while the answer is still fresh.
               </p>
               <div className='mt-8 flex flex-wrap gap-3 text-sm text-on-surface-variant'>
-                {['Bundled ACAMS PDF', 'Keyboard-friendly study', 'Progress saved locally'].map(
+                {['ACAMS flashcards', 'Sprint study', 'Progress saved'].map(
                   (item) => (
                     <span
                       className='rounded-full border border-outline-variant/20 bg-surface-container-low/70 px-4 py-2'
@@ -340,9 +290,6 @@ export default function FlashcardStudio() {
               importProgress={importProgress}
               isImporting={isImporting}
               onLoadBundledDeck={() => void loadBundledDeck()}
-              onTryDemo={() => {
-                replaceDeck(createDeck('Focus Deck demo', DEMO_CARDS));
-              }}
             />
           </section>
         )}
@@ -384,7 +331,7 @@ export default function FlashcardStudio() {
           />
         )}
       </main>
-      <footer className='relative z-10 mx-auto max-w-6xl px-5 pb-8 text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant/70 sm:px-8'>
+      <footer className='relative z-10 mx-auto max-w-6xl px-5 pb-8 text-xs font-semibold text-on-surface-variant/70 sm:px-8'>
         &copy; {new Date().getFullYear()} zerosix industries
       </footer>
       {editingCard && (

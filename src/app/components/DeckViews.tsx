@@ -10,13 +10,11 @@ export function ImportPanel({
   importProgress,
   isImporting,
   onLoadBundledDeck,
-  onTryDemo,
 }: {
   error: string;
   importProgress: string;
   isImporting: boolean;
   onLoadBundledDeck: () => void;
-  onTryDemo: () => void;
 }) {
   return (
     <div
@@ -52,11 +50,6 @@ export function ImportPanel({
           {error}
         </p>
       )}
-      <div className='mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-semibold text-on-surface-variant'>
-        <button className='cursor-pointer transition hover:text-on-surface' onClick={onTryDemo} type='button'>
-          Load demo deck
-        </button>
-      </div>
     </div>
   );
 }

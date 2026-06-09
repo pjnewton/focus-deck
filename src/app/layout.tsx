@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Focus Deck | Local Flashcard Studio',
-  description: 'A private, browser-only flashcard study workspace.',
+  title: 'Focus Deck | ACAMS Flashcards',
+  description: 'A focused ACAMS flashcard study deck for quick recall sprints.',
   robots: {
     index: false,
     follow: false,
