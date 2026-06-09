@@ -271,9 +271,6 @@ export default function FlashcardStudio() {
               </span>
               Focus Deck
             </span>
-            <span className='ml-10 block text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-on-surface-variant'>
-              Local study studio
-            </span>
           </button>
           <div className='flex items-center gap-2'>
             {deck && view !== 'study' && (
