@@ -8,7 +8,7 @@ import {
   useReducer,
   useState,
 } from 'react';
-import { createDeck, resetDeckProgress, updateDeckCard, type Deck } from '@/lib/deck';
+import { createDeck, updateDeckCard, type Deck } from '@/lib/deck';
 import {
   parsePrintableFlashcardPage,
   type Flashcard,
@@ -244,16 +244,6 @@ export default function FlashcardStudio() {
     setEditingCard(null);
   }
 
-  function resetProgress() {
-    if (!deck || !window.confirm('Reset saved study progress in this deck?')) return;
-    setDeck(resetDeckProgress(deck));
-  }
-
-  function clearDeck() {
-    if (!window.confirm('Remove the local deck from this browser?')) return;
-    replaceDeck(null);
-  }
-
   if (!hasHydrated) {
     return (
       <main className={`${styles.studio} flex min-h-screen items-center justify-center`}>
@@ -306,9 +296,6 @@ export default function FlashcardStudio() {
                 End sprint
               </button>
             )}
-            <span className='hidden rounded-lg border border-outline-variant/25 px-3 py-2 text-xs font-semibold text-on-surface-variant sm:inline-flex'>
-              Local only
-            </span>
           </div>
         </div>
       </header>
@@ -368,9 +355,6 @@ export default function FlashcardStudio() {
             deck={deck}
             importProgress={importProgress}
             onBrowse={() => dispatch({ type: 'open-browse' })}
-            onClear={clearDeck}
-            onLoadBundledDeck={() => void loadBundledDeck({ confirmReplace: true })}
-            onResetProgress={resetProgress}
             onStart={() => startSprint()}
             setSprintSize={setSprintSize}
             sprintSize={Math.min(sprintSize, deck.cards.length)}
@@ -403,6 +387,9 @@ export default function FlashcardStudio() {
           />
         )}
       </main>
+      <footer className='relative z-10 mx-auto max-w-6xl px-5 pb-8 text-xs font-semibold uppercase tracking-[0.18em] text-on-surface-variant/70 sm:px-8'>
+        &copy; {new Date().getFullYear()} zerosix industries
+      </footer>
       {editingCard && (
         <EditCardModal
           card={editingCard}

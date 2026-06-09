@@ -6,6 +6,7 @@
     "dev": "next dev",
     "prebuild": "node scripts/prepare-bundled-pdf.mjs",
     "build": "next build",
+    "check:pdf-url": "node scripts/check-pdf-url.mjs",
     "prepare:pdf": "node scripts/prepare-bundled-pdf.mjs",
     "start": "next start",
     "lint": "eslint",

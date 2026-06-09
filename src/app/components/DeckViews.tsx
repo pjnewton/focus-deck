@@ -65,9 +65,6 @@ export function Dashboard({
   deck,
   importProgress,
   onBrowse,
-  onClear,
-  onLoadBundledDeck,
-  onResetProgress,
   onStart,
   setSprintSize,
   sprintSize,
@@ -75,9 +72,6 @@ export function Dashboard({
   deck: Deck;
   importProgress: string;
   onBrowse: () => void;
-  onClear: () => void;
-  onLoadBundledDeck: () => void;
-  onResetProgress: () => void;
   onStart: () => void;
   setSprintSize: (size: number) => void;
   sprintSize: number;
@@ -191,17 +185,6 @@ export function Dashboard({
         </div>
       </div>
 
-      <div className='mt-7 flex flex-wrap gap-4 text-xs font-semibold text-on-surface-variant'>
-        <button className='cursor-pointer transition hover:text-on-surface' onClick={onLoadBundledDeck} type='button'>
-          Reload ACAMS deck
-        </button>
-        <button className='cursor-pointer transition hover:text-on-surface' onClick={onResetProgress} type='button'>
-          Reset progress
-        </button>
-        <button className='cursor-pointer transition hover:text-error' onClick={onClear} type='button'>
-          Remove local deck
-        </button>
-      </div>
     </section>
   );
 }

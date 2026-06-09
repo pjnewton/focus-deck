@@ -10,13 +10,24 @@ const envBase64 = process.env.ACAMS_FLASHCARDS_PDF_BASE64;
 const envUrl = process.env.ACAMS_FLASHCARDS_PDF_URL;
 const envToken = process.env.ACAMS_FLASHCARDS_PDF_TOKEN;
 
+function describeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return 'invalid URL';
+  }
+}
+
 async function downloadPdf(url) {
   const response = await fetch(url, {
     headers: envToken ? { Authorization: `Bearer ${envToken}` } : undefined,
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to download bundled ACAMS PDF: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to download bundled ACAMS PDF from ${describeUrl(url)}: ${response.status} ${response.statusText}`,
+    );
   }
 
   const contentType = response.headers.get('content-type') ?? '';
